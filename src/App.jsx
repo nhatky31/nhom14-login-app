@@ -46,13 +46,25 @@ function App() {
       await signInWithPopup(auth, provider);
     } catch (error) {
       console.error("Lỗi đăng nhập:", error);
-      if (error.code === 'auth/popup-blocked') {
+      if (error.code === 'auth/unauthorized-domain') {
+        setErrorMsg(
+          `Domain "${window.location.hostname}" chưa được cấp quyền trong Firebase. ` +
+          'Vào Firebase Console > Authentication > Settings > Authorized domains để thêm domain này.'
+        );
+      } else if (error.code === 'auth/popup-blocked') {
         try {
           await signInWithRedirect(auth, provider);
           return;
         } catch (redirectError) {
           console.error("Lỗi đăng nhập redirect:", redirectError);
-          setErrorMsg("Trình duyệt chặn cửa sổ đăng nhập. Hãy cho phép popup hoặc thử lại.");
+          if (redirectError.code === 'auth/unauthorized-domain') {
+            setErrorMsg(
+              `Domain "${window.location.hostname}" chưa được cấp quyền trong Firebase. ` +
+              'Vào Firebase Console > Authentication > Settings > Authorized domains để thêm domain này.'
+            );
+          } else {
+            setErrorMsg("Đăng nhập redirect thất bại: " + redirectError.message);
+          }
         }
       } else if (error.code === 'auth/account-exists-with-different-credential') {
         setErrorMsg("Email này đã được dùng để đăng nhập bằng phương thức khác.");
