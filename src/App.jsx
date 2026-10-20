@@ -5,6 +5,7 @@ import {
   GoogleAuthProvider, 
   GithubAuthProvider, 
   signInWithPopup, 
+  signInWithRedirect,
   signOut, 
   onAuthStateChanged 
 } from 'firebase/auth';
@@ -45,7 +46,15 @@ function App() {
       await signInWithPopup(auth, provider);
     } catch (error) {
       console.error("Lỗi đăng nhập:", error);
-      if (error.code === 'auth/account-exists-with-different-credential') {
+      if (error.code === 'auth/popup-blocked') {
+        try {
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirectError) {
+          console.error("Lỗi đăng nhập redirect:", redirectError);
+          setErrorMsg("Trình duyệt chặn cửa sổ đăng nhập. Hãy cho phép popup hoặc thử lại.");
+        }
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
         setErrorMsg("Email này đã được dùng để đăng nhập bằng phương thức khác.");
       } else {
         setErrorMsg("Đăng nhập thất bại: " + error.message);
